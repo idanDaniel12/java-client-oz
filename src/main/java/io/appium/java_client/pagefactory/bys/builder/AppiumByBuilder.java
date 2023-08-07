@@ -16,9 +16,14 @@
 
 package io.appium.java_client.pagefactory.bys.builder;
 
+import static io.appium.java_client.remote.AutomationName.IOS_XCUI_TEST;
+import static io.appium.java_client.remote.MobilePlatform.ANDROID;
+import static io.appium.java_client.remote.MobilePlatform.IOS;
+import static io.appium.java_client.remote.MobilePlatform.TVOS;
+import static io.appium.java_client.remote.MobilePlatform.WINDOWS;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.pagefactory.AbstractAnnotations;
-import org.openqa.selenium.support.pagefactory.ByAll;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -29,12 +34,6 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-
-import static io.appium.java_client.remote.AutomationName.IOS_XCUI_TEST;
-import static io.appium.java_client.remote.MobilePlatform.ANDROID;
-import static io.appium.java_client.remote.MobilePlatform.IOS;
-import static io.appium.java_client.remote.MobilePlatform.TVOS;
-import static io.appium.java_client.remote.MobilePlatform.WINDOWS;
 
 /**
  * It is the basic handler of Appium-specific page object annotations
