@@ -16,22 +16,25 @@
 
 package io.appium.java_client.pagefactory.bys.builder;
 
-import static io.appium.java_client.remote.AutomationName.IOS_XCUI_TEST;
-import static io.appium.java_client.remote.MobilePlatform.ANDROID;
-import static io.appium.java_client.remote.MobilePlatform.IOS;
-import static io.appium.java_client.remote.MobilePlatform.TVOS;
-import static io.appium.java_client.remote.MobilePlatform.WINDOWS;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.pagefactory.AbstractAnnotations;
+import org.openqa.selenium.support.pagefactory.ByAll;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
+
+import static io.appium.java_client.remote.AutomationName.IOS_XCUI_TEST;
+import static io.appium.java_client.remote.MobilePlatform.ANDROID;
+import static io.appium.java_client.remote.MobilePlatform.IOS;
+import static io.appium.java_client.remote.MobilePlatform.TVOS;
+import static io.appium.java_client.remote.MobilePlatform.WINDOWS;
 
 /**
  * It is the basic handler of Appium-specific page object annotations
@@ -43,17 +46,15 @@ public abstract class AppiumByBuilder extends AbstractAnnotations {
     protected static final Class<?>[] DEFAULT_ANNOTATION_METHOD_ARGUMENTS = new Class<?>[] {};
 
     private static final List<String> METHODS_TO_BE_EXCLUDED_WHEN_ANNOTATION_IS_READ =
-        new ArrayList<String>() {
-            private static final long serialVersionUID = 1L; {
-                List<String> objectClassMethodNames =
-                    getMethodNames(Object.class.getDeclaredMethods());
-                addAll(objectClassMethodNames);
-                List<String> annotationClassMethodNames =
-                    getMethodNames(Annotation.class.getDeclaredMethods());
-                annotationClassMethodNames.removeAll(objectClassMethodNames);
-                addAll(annotationClassMethodNames);
-            }
-        };
+            new ArrayList<String>() {
+                private static final long serialVersionUID = 1L; {
+                    Stream.of(Object.class, Annotation.class, Proxy.class)
+                            .map(Class::getDeclaredMethods)
+                            .map(AppiumByBuilder::getMethodNames)
+                            .flatMap(List::stream)
+                            .forEach(this::add);
+                }
+            };
     protected final AnnotatedElementContainer annotatedElementContainer;
     protected final String platform;
     protected final String automation;
@@ -73,14 +74,14 @@ public abstract class AppiumByBuilder extends AbstractAnnotations {
     }
 
     private static Method[] prepareAnnotationMethods(Class<? extends Annotation> annotation) {
-        List<String> targeAnnotationMethodNamesList =
-            getMethodNames(annotation.getDeclaredMethods());
-        targeAnnotationMethodNamesList.removeAll(METHODS_TO_BE_EXCLUDED_WHEN_ANNOTATION_IS_READ);
-        Method[] result = new Method[targeAnnotationMethodNamesList.size()];
-        for (String methodName : targeAnnotationMethodNamesList) {
+        List<String> targetAnnotationMethodNamesList =
+                getMethodNames(annotation.getDeclaredMethods());
+        targetAnnotationMethodNamesList.removeAll(METHODS_TO_BE_EXCLUDED_WHEN_ANNOTATION_IS_READ);
+        Method[] result = new Method[targetAnnotationMethodNamesList.size()];
+        for (String methodName : targetAnnotationMethodNamesList) {
             try {
-                result[targeAnnotationMethodNamesList.indexOf(methodName)] =
-                    annotation.getMethod(methodName, DEFAULT_ANNOTATION_METHOD_ARGUMENTS);
+                result[targetAnnotationMethodNamesList.indexOf(methodName)] =
+                        annotation.getMethod(methodName, DEFAULT_ANNOTATION_METHOD_ARGUMENTS);
             } catch (NoSuchMethodException | SecurityException e) {
                 throw new RuntimeException(e);
             }
@@ -101,14 +102,14 @@ public abstract class AppiumByBuilder extends AbstractAnnotations {
                     return value.getName();
                 }
             } catch (IllegalAccessException
-                | IllegalArgumentException
-                | InvocationTargetException e) {
+                     | IllegalArgumentException
+                     | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
         }
         throw new IllegalArgumentException(
-            "@" + mobileBy.getClass().getSimpleName() + ": one of " + Strategies.strategiesNames()
-                .toString() + " should be filled");
+                "@" + mobileBy.getClass().getSimpleName() + ": one of " + Strategies.strategiesNames()
+                        .toString() + " should be filled");
     }
 
     private static By getMobileBy(Annotation annotation, String valueName) {
@@ -119,12 +120,12 @@ public abstract class AppiumByBuilder extends AbstractAnnotations {
             }
         }
         throw new IllegalArgumentException(
-            "@" + annotation.getClass().getSimpleName() + ": There is an unknown strategy "
-                + valueName);
+                "@" + annotation.getClass().getSimpleName() + ": There is an unknown strategy "
+                        + valueName);
     }
 
     private static <T extends By> T getComplexMobileBy(Annotation[] annotations,
-        Class<T> requiredByClass) {
+                                                       Class<T> requiredByClass) {
         By[] byArray = new By[annotations.length];
         for (int i = 0; i < annotations.length; i++) {
             byArray[i] = getMobileBy(annotations[i], getFilledValue(annotations[i]));
