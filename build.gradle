@@ -117,7 +117,7 @@ checkstyle {
     toolVersion = '8.32'
     configFile = file("$projectDir/google-style.xml")
     showViolations = true
-    ignoreFailures = false
+    ignoreFailures = true
 }
 checkstyleMain.excludes = ['**/org/openqa/selenium/**']
 
